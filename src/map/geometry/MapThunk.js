@@ -1,5 +1,5 @@
 import { Object3D, Vector2, Vector3, Sphere } from "three"
-import { qrToWorldX, qrToWorldY } from '../util/coords';
+import { qrToWorldX, qrToWorldY } from '../../util/coords';
 import MapMesh from "./MapMesh";
 // import BoundingBox from "./BoundingBox";
 

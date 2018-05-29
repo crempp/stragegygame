@@ -1,8 +1,8 @@
 import { Object3D, Vector2, Vector3} from "three"
-import QuadTree from "./QuadTree";
-import { qrToWorld, screenToWorld} from '../util/coords';
+import QuadTree from "../QuadTree";
+import { qrToWorld, screenToWorld} from '../../util/coords';
 import {BoundingBox} from "./BoundingBox";
-import { range } from '../util/util';
+import { range } from '../../util/util';
 import { MapMeshOptions } from './MapMesh';
 import MapThunk from "./MapThunk";
 

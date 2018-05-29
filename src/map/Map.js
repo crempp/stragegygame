@@ -1,3 +1,11 @@
+/**
+ * @description
+ * The Map module contains all the classes used to generate a hex map for the
+ * game
+ *
+ * @module map
+ */
+
 import {
   MeshBasicMaterial,
   Mesh,
@@ -6,9 +14,9 @@ import {
 import Grid from "./Grid";
 import { Options } from "../Options";
 import Controller from "./Controller";
-import ChunkedLazyMapMesh from "./ChunkedLazyMapMesh";
-import MapMesh from "./MapMesh";
-import Hexagon from "./Hexagon";
+import ChunkedLazyMapMesh from "./geometry/ChunkedLazyMapMesh";
+import MapMesh from "./geometry/MapMesh";
+import Hexagon from "./geometry/Hexagon";
 import {
   loadTexture,
   loadTextureAtlas,
@@ -30,8 +38,17 @@ import {
   perlin2,
 } from "../util/perlin";
 
-
-export default class Map {
+/**
+ * @classdesc
+ * Map does a foo bar asdfasd asdf asdf asdfaf dsasdf
+ *
+ * @memberOf module:map
+ */
+class Map {
+  /**
+   * @constructor
+   * @param three
+   */
   constructor (three) {
     this.three = three;
 
@@ -246,127 +263,137 @@ export default class Map {
   //--------------------------------------------------------------------------------
   // MAP GENERATION
   //--------------------------------------------------------------------------------
-
-  generateMap () {
-    seed(Date.now() + Math.random());
-    let a = new Grid(this.mapSize, this.mapSize);
-    let b = a.mapQR((q, r) => this.tile(q, r, this.randomHeight(q, r)));
-    const grid = b;
-    //const grid = new Grid(this.mapSize, this.mapSize).mapQR((q, r) => this.tile(q, r, this.randomHeight(q, r)));
-    return this.generateRivers(grid);
-  }
-
-  randomHeight(q, r) {
-    let noise1 = simplex2(q / 10, r / 10);
-    let noise2 = perlin2(q / 5, r / 5);
-    let noise3 = perlin2(q / 30, r / 30);
-    let noise = noise1 + noise2 + noise3;
-
-    return noise / 3.0 * 2.0
-  }
-
-  isLand(height) {
-    return height >= 0.0 && height < 0.75
-  }
-
-  isWater(height) {
-    return height < 0.0
-  }
-
-  isHill(height) {
-    return height >= 0.375 && height < 0.75
-  }
-
-  isMountain(height) {
-    return height >= 0.75
-  }
-
-  coldZone(q, r, height) {
-    if (Math.abs(r) > this.mapSize * (0.44 + Math.random() * 0.03)) return "snow";
-    else return "tundra";
-  }
-
-  warmZone(q, r, height) {
-    return varying(["grass", "grass", "grass", "plains", "plains", "desert"]);
-  }
-
-  terrainAt(q, r, height) {
-    if (height < 0.0) return "ocean";
-    else if (height > 0.75) return "mountain";
-    else if (Math.abs(r) > this.mapSize * 0.4) return this.coldZone(q, r, height);
-    else return this.warmZone(q, r, height);
-  }
-
-  treeAt(q, r, terrain) {
-    if (terrain === "snow") return 2;
-    else if (terrain === "tundra") return 1;
-    else return 0;
-  }
-
-  isAccessibleMountain(tile, grid) {
-    let ns = grid.neighbors(tile.q, tile.r);
-    let spring = this.isMountain(tile.height);
-    return spring && ns.filter(t => this.isLand(t.height)).length > 3;
-  }
-
-  growRiver (spawn) {
-    const river = [spawn];
-    let tile = spawn;
-
-    while (!this.isWater(tile.height) && river.length < 20) {
-      const neighbors = sortByHeight(grid.neighbors(tile.q, tile.r)).filter(t => !contains(t, river))
-      if (neighbors.length === 0) {
-        console.info("Aborted river generation", river, tile);
-        return river;
-      }
-
-      const next = neighbors[Math.max(neighbors.length - 1, Math.floor(Math.random() * 1.2))];
-      river.push(next);
-      tile = next;
-    }
-    return river;
-  }
-
-  tile (q, r, height) {
-    const terrain = this.terrainAt(q, r, height);
-    const trees = this.isMountain(height) || this.isWater(height) || terrain === "desert" ? undefined :
-      (varying([true, false, false]) ? this.treeAt(q, r, terrain) : undefined);
-    return {
-      q,
-      r,
-      height,
-      terrain,
-      treeIndex: trees,
-      rivers: null,
-      fog: false,
-      clouds: false,
-      isMountain: this.isMountain(height),
-      isHill: this.isHill(height),
-      isWater: this.isWater(height),
-      bufferIndex: -1,
-    }
-  }
-
-  generateRivers (grid){
-    // find a few river spawn points, preferably in mountains
-    const tiles = grid.toArray();
-    const numRivers = Math.max(1, Math.round(Math.sqrt(grid.length) / 4));
-    const spawns = shuffle(tiles.filter(t => this.isAccessibleMountain(t, grid))).slice(0, numRivers);
-
-    // grow the river towards the water by following the height gradient
-    const rivers = spawns.map(this.growRiver);
-
-    // assign sequential indices to rivers and their tiles
-    rivers.forEach((river, riverIndex) => {
-      river.forEach((tile, riverTileIndex) => {
-        if (riverTileIndex < river.length - 1) {
-          tile.rivers = [{riverIndex, riverTileIndex}]
-        }
-      })
-    });
-
-    return grid;
-  }
+  //
+  // generateMap () {
+  //   seed(Date.now() + Math.random());
+  //   let a = new Grid(this.mapSize, this.mapSize);
+  //   let b = a.mapQR((q, r) => this.tile(q, r, this.randomHeight(q, r)));
+  //   const grid = b;
+  //   //const grid = new Grid(this.mapSize, this.mapSize).mapQR((q, r) => this.tile(q, r, this.randomHeight(q, r)));
+  //   return this.generateRivers(grid);
+  // }
+  //
+  // randomHeight(q, r) {
+  //   let noise1 = simplex2(q / 10, r / 10);
+  //   let noise2 = perlin2(q / 5, r / 5);
+  //   let noise3 = perlin2(q / 30, r / 30);
+  //   let noise = noise1 + noise2 + noise3;
+  //
+  //   return noise / 3.0 * 2.0
+  // }
+  //
+  // isLand(height) {
+  //   return height >= 0.0 && height < 0.75
+  // }
+  //
+  // isWater(height) {
+  //   return height < 0.0
+  // }
+  //
+  // isHill(height) {
+  //   return height >= 0.375 && height < 0.75
+  // }
+  //
+  // isMountain(height) {
+  //   return height >= 0.75
+  // }
+  //
+  // coldZone(q, r, height) {
+  //   if (Math.abs(r) > this.mapSize * (0.44 + Math.random() * 0.03)) return "snow";
+  //   else return "tundra";
+  // }
+  //
+  // warmZone(q, r, height) {
+  //   return varying(["grass", "grass", "grass", "plains", "plains", "desert"]);
+  // }
+  //
+  // terrainAt(q, r, height) {
+  //   if (height < 0.0) return "ocean";
+  //   else if (height > 0.75) return "mountain";
+  //   else if (Math.abs(r) > this.mapSize * 0.4) return this.coldZone(q, r, height);
+  //   else return this.warmZone(q, r, height);
+  // }
+  //
+  // treeAt(q, r, terrain) {
+  //   if (terrain === "snow") return 2;
+  //   else if (terrain === "tundra") return 1;
+  //   else return 0;
+  // }
+  //
+  // /**
+  //  * Is the tile a mountain tile that is accessible by a land tile?
+  //  *
+  //  * Accessiblily means that the mountain tile contains 4 or more land terrain
+  //  * neighbors
+  //  *
+  //  * @param tile
+  //  * @param grid
+  //  * @return {*|boolean}
+  //  */
+  // isAccessibleMountain(tile, grid) {
+  //   let ns = grid.neighbors(tile.q, tile.r);
+  //   let spring = this.isMountain(tile.height);
+  //   return spring && ns.filter(t => this.isLand(t.height)).length > 3;
+  // }
+  //
+  // growRiver (spawn) {
+  //   const river = [spawn];
+  //   let tile = spawn;
+  //
+  //   while (!this.isWater(tile.height) && river.length < 20) {
+  //     const neighbors = sortByHeight(grid.neighbors(tile.q, tile.r)).filter(t => !contains(t, river))
+  //     if (neighbors.length === 0) {
+  //       console.info("Aborted river generation", river, tile);
+  //       return river;
+  //     }
+  //
+  //     const next = neighbors[Math.max(neighbors.length - 1, Math.floor(Math.random() * 1.2))];
+  //     river.push(next);
+  //     tile = next;
+  //   }
+  //   return river;
+  // }
+  //
+  // tile (q, r, height) {
+  //   const terrain = this.terrainAt(q, r, height);
+  //   const trees = this.isMountain(height) || this.isWater(height) || terrain === "desert" ? undefined :
+  //     (varying([true, false, false]) ? this.treeAt(q, r, terrain) : undefined);
+  //   return {
+  //     q,
+  //     r,
+  //     height,
+  //     terrain,
+  //     treeIndex: trees,
+  //     rivers: null,
+  //     fog: false,
+  //     clouds: false,
+  //     isMountain: this.isMountain(height),
+  //     isHill: this.isHill(height),
+  //     isWater: this.isWater(height),
+  //     bufferIndex: -1,
+  //   }
+  // }
+  //
+  // generateRivers (grid){
+  //   // find a few river spawn points, preferably in mountains
+  //   const tiles = grid.toArray();
+  //   const numRivers = Math.max(1, Math.round(Math.sqrt(grid.length) / 4));
+  //   const spawns = shuffle(tiles.filter(t => this.isAccessibleMountain(t, grid))).slice(0, numRivers);
+  //
+  //   // grow the river towards the water by following the height gradient
+  //   const rivers = spawns.map(this.growRiver);
+  //
+  //   // assign sequential indices to rivers and their tiles
+  //   rivers.forEach((river, riverIndex) => {
+  //     river.forEach((tile, riverTileIndex) => {
+  //       if (riverTileIndex < river.length - 1) {
+  //         tile.rivers = [{riverIndex, riverTileIndex}]
+  //       }
+  //     })
+  //   });
+  //
+  //   return grid;
+  // }
 
   /**
    * Computes the water adjecency for the given tile.
@@ -408,6 +435,6 @@ export default class Map {
       return 1
     })
   }
-
-
 }
+
+export default Map;

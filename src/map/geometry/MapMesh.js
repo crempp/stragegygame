@@ -1,138 +1,83 @@
-import Hexagon from "./Hexagon"
+/**
+ * @author Chad Rempp <crempp@gmail.com>
+ * @copyright 2018 Chad Rempp
+ */
 import {
   InstancedBufferGeometry,
   InstancedBufferAttribute,
   RawShaderMaterial,
-  // BufferGeometry,
-  // Vector2,
   Vector3,
   Vector4,
-  // Texture,
   Mesh,
   Group,
-  // TextureLoader,
-  // XHRLoader,
-  // BufferAttribute,
-  // Sphere,
   Color,
   FrontSide,
-  RepeatWrapping
 } from "three"
-import {qrToWorld} from '../util/coords';
-import Grid from "./Grid";
-import {LAND_FRAGMENT_SHADER} from '../shaders/land.fragment';
-import {LAND_VERTEX_SHADER} from '../shaders/land.vertex';
-import {MOUNTAINS_FRAGMENT_SHADER} from '../shaders/mountains.fragment';
-import {MOUNTAINS_VERTEX_SHADER} from "../shaders/mountains.vertex";
-import Forests from "./Forests";
-import { loadTexture } from "../util/util";
-import { Options } from "../Options";
+import {qrToWorld} from '../../util/coords';
+import { Options } from "../../Options";
+import Hexagon from "./Hexagon"
+import Grid from "../Grid";
+import { LAND_FRAGMENT_SHADER } from '../../shaders/land.fragment';
+import { LAND_VERTEX_SHADER } from '../../shaders/land.vertex';
+import { MOUNTAINS_FRAGMENT_SHADER } from '../../shaders/mountains.fragment';
+import { MOUNTAINS_VERTEX_SHADER } from "../../shaders/mountains.vertex";
+import Forests from "../Forests";
 
-// export interface MapMeshOptions {
-//   treeSpritesheetSubdivisions: number;
-//
-//   /**
-//    * Default 1.0
-//    */
-//   treeSize?: number;
-//
-//   treeAlphaTest?: number;
-//
-//   /**
-//    * Default 50
-//    */
-//   treesPerForest?: number;
-//
-//   /**
-//    * Options per tree index to vary individual tree types.
-//    */
-//   treeOptions?: {
-//     scale?: number;
-//
-//   /*
-//    * Number of trees per forest
-//    */
-//   treesPerForest: number;
-// }[];
-//
-//   /**
-//    * Overall scale of the geometry. Default 1.0
-//    */
-//   scale?: number;
-//
-// }
-//
-// export interface MapMeshTile extends TileData {
-//   /**
-//    * Index of this tile in its vertex buffer
-//    */
-//   bufferIndex: number;
-//
-//   isMountain: boolean;
-// }
-//
-// export interface TextureReplacements {
-//   terrainAtlasTexture?: Texture;
-//   riverAtlasTexture?: Texture;
-//   coastAtlasTexture?: Texture;
-//   undiscoveredTexture?: Texture;
-//   treeTexture?: Texture;
-// }
 
-export default class MapMesh extends Group {
-
+/**
+ * @classdesc
+ * MapMesh does a foo bar asdfasd asdf asdf asdfaf dsasdf
+ *
+ * @extends three.Group
+ * @memberOf module:map
+ */
+class MapMesh extends Group {
   /**
-   * @param tiles the tiles to actually render in this mesh
+   * @constructor
+   * @param {Array} tiles the tiles to actually render in this mesh
    * @param globalGrid the grid with all tiles, including the ones that are not rendered in this mesh
+   * @param {Object} assets
    */
-  constructor(tiles, globalGrid, terrainAtlas) {
+  constructor(tiles, globalGrid, assets) {
     super();
 
+    /** **/
+    this.assets = assets;
+
+    /** */
     this.land = null;
+
+    /** */
     this.mountains = null;
+
+    /** */
     this.trees = null;
+
+    /** */
     this.boundingSphere = null;
-    this._showGrid = true;
-    this.terrainAtlas = terrainAtlas;
 
-    this.terrainAtlasTexture = loadTexture("terrain.png");
-    this.hillsNormalTexture = loadTexture("hills-normal.png");
-    this.coastAtlasTexture = loadTexture("coast-diffuse.png");
-    this.riverAtlasTexture = loadTexture("river-diffuse.png");
-    this.undiscoveredTexture = loadTexture("paper.jpg");
-    this.treeSpritesheet = loadTexture("trees.png");
-    this.transitionTexture = loadTexture("transitions.png");
+    /** @private */
+    this.showGrid = true;
 
-    /**
-     * List of tiles displayed in this mesh
-     */
-    // this.tiles = tiles.map(t => ({
-    //   bufferIndex: -1,
-    //   isMountain: isMountain(t.height),
-    //   ...t
-    // }));
+    /** List of tiles displayed in this mesh */
     this.tiles = tiles;
 
-    /**
-     * Grid of the tiles displayed in this mesh containing the same elements as this.tiles
-     */
+    /** Grid of the tiles displayed in this mesh containing the same elements as this.tiles */
     this.localGrid = new Grid(0, 0).init(this.tiles);
 
-    /**
-     * Global grid of all tiles, even the ones not displayed in this mesh
-     */
+    /** Global grid of all tiles, even the ones not displayed in this mesh */
     this.globalGrid = globalGrid || this.localGrid;
 
-    this.hillsNormalTexture.wrapS = this.hillsNormalTexture.wrapT = RepeatWrapping;
-    this.terrainAtlasTexture.wrapS = this.terrainAtlasTexture.wrapT = RepeatWrapping;
-    this.undiscoveredTexture.wrapS = this.undiscoveredTexture.wrapT = RepeatWrapping;
-    //this.transitionTexture.flipY = true
+    // this.hillsNormalTexture.wrapS = this.hillsNormalTexture.wrapT = RepeatWrapping;
+    // this.terrainAtlasTexture.wrapS = this.terrainAtlasTexture.wrapT = RepeatWrapping;
+    // this.undiscoveredTexture.wrapS = this.undiscoveredTexture.wrapT = RepeatWrapping;
+    // //this.transitionTexture.flipY = true
 
-    let blurp = this.tiles.filter(t => !t.isMountain);
-
+    let notMountainTiles = this.tiles.filter(t => !t.isMountain);
+    let mountainTiles = this.tiles.filter(t => t.isMountain)
     this.loaded = Promise.all([
-      this.createLandMesh(blurp),
-      this.createMountainMesh(this.tiles.filter(t => t.isMountain)),
+      this.createLandMesh(notMountainTiles),
+      this.createMountainMesh(mountainTiles),
       this.createTrees()
     ])
     //   .catch((err) => {
@@ -140,12 +85,20 @@ export default class MapMesh extends Group {
     // });
   }
 
+  /**
+   *
+   * @return {boolean}
+   */
   get showGrid() {
-    return this._showGrid
+    return this.showGrid
   }
 
+  /**
+   *
+   * @param value
+   */
   set showGrid(value) {
-    this._showGrid = value;
+    this.showGrid = value;
 
     const landMaterial = this.land.material;
     landMaterial.uniforms.showGrid.value = value ? 1.0 : 0.0;
@@ -157,6 +110,7 @@ export default class MapMesh extends Group {
 
   /**
    * "Hot-swaps" the given textures.
+   *
    * @param textures
    */
   replaceTextures(textures) {
@@ -174,17 +128,27 @@ export default class MapMesh extends Group {
     }
   }
 
+  /**
+   *
+   * @param tiles
+   */
   updateTiles(tiles) {
     this.updateFogAndClouds(tiles);
     this.trees.updateTiles(tiles);
   }
 
+  /**
+   *
+   * @param q
+   * @param r
+   */
   getTile(q, r) {
     return this.localGrid.get(q, r);
   }
 
   /**
    * Updates only fog and clouds visualization of existing tiles.
+   *
    * @param tiles changed tiles
    */
   updateFogAndClouds(tiles) {
@@ -209,6 +173,13 @@ export default class MapMesh extends Group {
     mountainsStyleAttr.needsUpdate = true;
   }
 
+  /**
+   *
+   * @param attr
+   * @param index
+   * @param fog
+   * @param clouds
+   */
   static updateFogStyle (attr, index, fog, clouds) {
     const style = attr.getY(index);
     const fogMask = 0b1;
@@ -218,6 +189,11 @@ export default class MapMesh extends Group {
     attr.setY(index, withClouds);
   }
 
+  /**
+   *
+   * @async
+   * @return {Promise.<void>}
+   */
   async createTrees() {
     const trees = this.trees = new Forests(this.tiles, this.globalGrid, {
       treeSize: Options.treeSize || 1.44,
@@ -231,38 +207,43 @@ export default class MapMesh extends Group {
     this.add(trees);
   }
 
+  /**
+   * @async
+   * @param tiles
+   * @return {Promise.<void>}
+   */
   async createLandMesh(tiles) {
-    const atlas = this.terrainAtlas;
+    const atlas = this.assets.terrainAtlas;
     const geometry = this.createHexagonTilesGeometry(tiles, this.globalGrid, 0);
     const material = new RawShaderMaterial({
       uniforms: {
         sineTime: {value: 0.0},
-        showGrid: {value: this._showGrid ? 1.0 : 0.0},
+        showGrid: {value: this.showGrid ? 1.0 : 0.0},
         camera: {type: "v3", value: new Vector3(0, 0, 0)},
-        texture: {type: "t", value: this.terrainAtlasTexture},
+        texture: {type: "t", value: this.assets.textureTerrain},
         textureAtlasMeta: {
           type: "4f",
           value: new Vector4(atlas.width, atlas.height, atlas.cellSize, atlas.cellSpacing)
         },
         hillsNormal: {
           type: "t",
-          value: this.hillsNormalTexture
+          value: this.assets.textureHillsNormal
         },
         coastAtlas: {
           type: "t",
-          value: this.coastAtlasTexture
+          value: this.assets.textureCoastDiffuse
         },
         riverAtlas: {
           type: "t",
-          value: this.riverAtlasTexture
+          value: this.assets.textureRiverDiffuse
         },
         mapTexture: {
           type: "t",
-          value: this.undiscoveredTexture
+          value: this.assets.texturePaper
         },
         transitionTexture: {
           type: "t",
-          value: this.transitionTexture
+          value: this.assets.textureTransitions
         },
         lightDir: {
           type: "v3",
@@ -291,29 +272,35 @@ export default class MapMesh extends Group {
     this.land = new Mesh(geometry, material);
     this.land.frustumCulled = false;
 
+    // Add to group
     this.add(this.land);
   }
 
+  /**
+   * @async
+   * @param tiles
+   * @return {Promise.<void>}
+   */
   async createMountainMesh(tiles) {
-    const atlas = this.terrainAtlas;
+    const atlas = this.assets.terrainAtlas;
     const geometry = this.createHexagonTilesGeometry(tiles, this.globalGrid, 1);
     const material = new RawShaderMaterial({
       uniforms: {
         sineTime: {value: 0.0},
-        showGrid: {value: this._showGrid ? 1.0 : 0.0},
+        showGrid: {value: this.showGrid ? 1.0 : 0.0},
         camera: {type: "v3", value: new Vector3(0, 0, 0)},
-        texture: {type: "t", value: this.terrainAtlasTexture},
+        texture: {type: "t", value: this.assets.textureTerrain},
         textureAtlasMeta: {
           type: "4f",
           value: new Vector4(atlas.width, atlas.height, atlas.cellSize, atlas.cellSpacing)
         },
         hillsNormal: {
           type: "t",
-          value: this.hillsNormalTexture
+          value: this.assets.textureHillsNormal
         },
         mapTexture: {
           type: "t",
-          value: this.undiscoveredTexture
+          value: this.assets.texturePaper
         },
         lightDir: {
           type: "v3",
@@ -349,7 +336,7 @@ export default class MapMesh extends Group {
     const scale = Options.scale || 1.0;
     const hexagon = new Hexagon(scale, numSubdivisions);
     const geometry = new InstancedBufferGeometry();
-    const textureAtlas = this.terrainAtlas;
+    const textureAtlas = this.assets.terrainAtlas;
 
     geometry.maxInstancedCount = tiles.length;
     geometry.addAttribute("position", hexagon.geometry.attributes.position);
@@ -364,7 +351,7 @@ export default class MapMesh extends Group {
 
     //----------------
     const cellSize = textureAtlas.cellSize;
-    const cellSpacing = textureAtlas.cellSpacing;
+    // const cellSpacing = textureAtlas.cellSpacing;
     const numColumns = textureAtlas.width / cellSize;
 
     function terrainCellIndex(terrain) {
@@ -476,6 +463,12 @@ export default class MapMesh extends Group {
     }
   }
 
+  /**
+   *
+   * @param grid
+   * @param tile
+   * @return {*}
+   */
   computeRiverTextureIndex (grid, tile) {
     if (!tile.rivers) return 0;
     const coastCount = {count: 0};
@@ -496,3 +489,5 @@ export default class MapMesh extends Group {
     return x ? "1" : "0";
   }
 }
+
+export default MapMesh;

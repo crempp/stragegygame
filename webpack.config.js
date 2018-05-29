@@ -18,6 +18,16 @@ module.exports = {
     filename: "bundle.js"
   },
   // devtool: "source-map",
+  watchOptions: {
+    aggregateTimeout: 300,
+    poll: 1000,
+    ignored: [
+      /node_modules/,
+      /doc/,
+      /idea/,
+      /dist/,
+    ]
+  },
   module: {
     rules: [
       {

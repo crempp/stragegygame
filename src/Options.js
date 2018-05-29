@@ -11,6 +11,17 @@ export const Options = {
     zoom: 25,
   },
   map: {
+    tileOptions: {
+      mountainRange: [0.75, 99],
+      hillRange: [0.375, 0.75],
+      landRange: [0.0, 0.75],
+      waterRange: [-99, 0.0]
+    },
+    biomeOptions: {
+      warmZone: [],
+      coldZone: []
+    },
+
     mapSize: 96,
 
     /**

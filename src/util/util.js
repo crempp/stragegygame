@@ -1,9 +1,22 @@
-import { XHRLoader, TextureLoader } from "three";
+/**
+ * @description
+ * General shared utilities module
+ *
+ * @module util
+ */
+import { FileLoader, TextureLoader } from "three";
 import { Options } from "../Options";
 
-const fileLoader = new XHRLoader();
+const fileLoader = new FileLoader();
 const textureLoader = new TextureLoader();
 
+/**
+ * ????
+ *
+ * @param {number} qrRadius
+ * @return {Array}
+ * @memberOf module:util
+ */
 export function qrRange(qrRadius) {
   const coords = [];
 
@@ -17,6 +30,17 @@ export function qrRange(qrRadius) {
   return coords;
 }
 
+/**
+ * Apply a function to each index in the range [min, max]. The function is
+ * passed the index `i` as it's argument
+ *
+ * @deprecated
+ * @param {number} min
+ * @param {number} max
+ * @param {function} f
+ * @memberOf module:util
+ * @todo this is redundant, replace usages with `range(min, max).forEach(f(v, i))
+ */
 export function forEachRange(min, max, f) {
   if (!max) {
     return range(0, min);
@@ -27,16 +51,27 @@ export function forEachRange(min, max, f) {
   }
 }
 
-export function shuffle(a) {
-  for (let i = a.length; i; i--) {
-    let j = Math.floor(Math.random() * i);
-    let x = a[i - 1];
-    a[i - 1] = a[j];
-    a[j] = x;
-  }
-  return a
-}
+// export function shuffle(a) {
+//   for (let i = a.length; i; i--) {
+//     let j = Math.floor(Math.random() * i);
+//     let x = a[i - 1];
+//     a[i - 1] = a[j];
+//     a[j] = x;
+//   }
+//   return a
+// }
 
+/**
+ * Generate a range of numbers.
+ *
+ * If one argument is passed it will be the max of the range and the range
+ * will be [0, max]. If two arguments are passed they will be min and max
+ * respectively and the range will be [min, max].
+ *
+ * @param {number} minOrMax
+ * @param {number} max
+ * @return {Array}
+ */
 export function range(minOrMax, max) {
   if (!max) {
     return this.range(0, minOrMax);
@@ -79,9 +114,9 @@ export function flatten(items) {
   return [].concat.apply([], items);
 }
 
-export function varying(values) {
-  return values[Math.round(Math.random() * (values.length - 1))]
-}
+// export function varying(values) {
+//   return values[Math.round(Math.random() * (values.length - 1))]
+// }
 
 export function sortByHeight(tiles) {
   return tiles.sort((a, b) => b.height - a.height);
@@ -130,6 +165,19 @@ export function loadFile(path) {
 
 export async function loadJSON(path) {
   return loadFile(path).then(str => JSON.parse(str));
+}
+
+export function asyncLoadTexture (name) {
+  return new Promise((resolve, reject) => {
+    textureLoader.load(assetPath(name),
+      (texture) => {                          // onLoad
+        texture.name = name;
+        resolve(texture);
+      },
+      (xhr) => {},                            // onProgress
+      (error) => { reject(new Error(error)) } // onError
+    )
+  });
 }
 
 export function loadTexture (name) {

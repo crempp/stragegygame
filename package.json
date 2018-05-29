@@ -19,8 +19,11 @@
     "copy-webpack-plugin": "^4.3.0",
     "css-loader": "^0.28.7",
     "html-loader": "^0.5.1",
+    "jsdoc": "^3.5.5",
+    "minami": "^1.2.3",
     "node-sass": "^4.7.2",
     "sass-loader": "^6.0.6",
+    "seedrandom": "^2.4.3",
     "style-loader": "^0.19.1",
     "webpack": "^3.10.0",
     "webpack-bundle-analyzer": "^2.9.1",
@@ -31,8 +34,9 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "serve": "http-server dist",
     "watch": "webpack --progress --watch",
-    "dev": "webpack-dev-server"
+    "dev": "webpack-dev-server",
+    "doc": "jsdoc -c jsdoc.conf src"
   },
-  "author": "",
+  "author": "Chad Rempp <crempp@gmail.com>",
   "license": "ISC"
 }

@@ -1,5 +1,5 @@
 import {Vector2} from "three";
-import BoundingBox from "./BoundingBox";
+import BoundingBox from "./geometry/BoundingBox";
 
 export default class QuadTree {
 

@@ -23,13 +23,13 @@ export default class DebugGUI {
       this.camera.updateProjectionMatrix();
     });
     const cameraPositionFolder = cameraFolder.addFolder('Position');
-    cameraPositionFolder.add(this.camera.position, "x", -300, 300).listen().onChange(() => {
+    cameraPositionFolder.add(this.camera.position, "x", -350, 350).listen().onChange(() => {
       this.camera.updateProjectionMatrix();
     });
-    cameraPositionFolder.add(this.camera.position, "y", -300, 300).listen().onChange(() => {
+    cameraPositionFolder.add(this.camera.position, "y", -350, 350).listen().onChange(() => {
       this.camera.updateProjectionMatrix();
     });
-    cameraPositionFolder.add(this.camera.position, "z", -300, 300).listen().onChange(() => {
+    cameraPositionFolder.add(this.camera.position, "z", -350, 350).listen().onChange(() => {
       this.camera.updateProjectionMatrix();
     });
     const cameraRotationFolder = cameraFolder.addFolder('Rotation');
